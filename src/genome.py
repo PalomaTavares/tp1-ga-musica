@@ -1,43 +1,32 @@
 import random
 
-from config import GENOME_LEN, HOLD, MAJOR, REST, TONIC
+from config import GENOME_LEN, HOLD, GENE_MAX, REST, degree_to_midi, gene_to_degree
 
 
 def decode(genome):
-    """Convert a genome into events: (start_step, duration_steps, midi_pitch)."""
+    # Convert a genome into events: (start_step, duration_steps, midi_pitch).
     if not genome:
         return []
 
     events = []
     active_note = None  # (start_step, pitch)
 
-    for step_index, step in enumerate(genome):
-        is_hold = step == HOLD or str(step).upper() == "HOLD"
-        is_rest = step == REST or str(step).upper() == "REST"
-        is_pitch = not is_hold and not is_rest
-
-        if is_pitch:
-            if active_note is not None:
-                start_step, current_pitch = active_note
-                events.append((start_step, step_index - start_step, current_pitch))
-            active_note = (step_index, step)
+    for i, g in enumerate(genome):
+        if g == HOLD:
             continue
 
-        if is_hold:
-            if active_note is None:
-                # edge case: HOLD with no open note -> acts like a rest
-                continue
-            continue
+        if active_note is not None:
+            start, pitch = active_note
+            events.append((start, i - start, pitch))
+            active_note = None
 
-        if is_rest:
-            if active_note is not None:
-                start_step, current_pitch = active_note
-                events.append((start_step, step_index - start_step, current_pitch))
-                active_note = None
+        if g != REST:
+            pitch = degree_to_midi(gene_to_degree(g))
+            active_note = (i, pitch)
 
     if active_note is not None:
-        start_step, current_pitch = active_note
-        events.append((start_step, len(genome) - start_step, current_pitch))
+        start, pitch = active_note
+        events.append((start, len(genome) - start, pitch))
 
     return events
 
@@ -47,7 +36,7 @@ def random_genome(length=GENOME_LEN):
     for _ in range(length):
         roll = random.random()
         if roll < 0.6:
-            genome.append(random.choice(MAJOR) + TONIC)
+            genome.append(random.randint(2, GENE_MAX))
         elif roll < 0.8:
             genome.append(HOLD)
         else:
