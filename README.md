@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 ## Como rodar
 No terminal, na raiz do projeto:
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 
 ## Gerar uma melodia
